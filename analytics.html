@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+
+<!-- ── Summary Stats ── -->
+<div class="row g-3 mb-4">
+  {% for label, val, color in stats_list %}
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm bg-{{ color }} text-white">
+      <div class="card-body text-center">
+        <p class="mb-1 small">{{ label }}</p>
+        <h4>{{ val }}</h4>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ── Trend Chart ── -->
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-white fw-semibold">Monthly Average Consumption Trend</div>
+  <div class="card-body"><canvas id="trendChart" height="100"></canvas></div>
+</div>
+
+<div class="row g-3">
+  <!-- Peak Periods -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Top 5 Peak Demand Periods</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Region</th><th>Date</th><th>Usage (kWh)</th></tr></thead>
+          <tbody>
+            {% for r in peak_periods %}
+            <tr>
+              <td>{{ r.region }}</td>
+              <td>{{ r.date }}</td>
+              <td><span class="badge bg-danger">{{ r.usage }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-muted">No data.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- High Consumption Regions -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">High Consumption Regions (above avg)</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Region</th><th>Total (kWh)</th></tr></thead>
+          <tbody>
+            {% for region, total in high_regions.items %}
+            <tr>
+              <td>{{ region }}</td>
+              <td><span class="badge bg-warning text-dark">{{ total }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-center text-muted">No data.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Anomalies -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold">Detected Anomalies</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Region</th><th>Date</th><th>Usage (kWh)</th><th>Type</th><th>Threshold</th></tr></thead>
+          <tbody>
+            {% for a in anomalies %}
+            <tr>
+              <td>{{ a.record.region }}</td>
+              <td>{{ a.record.date }}</td>
+              <td>{{ a.record.usage }}</td>
+              <td>
+                <span class="badge bg-{% if a.type == 'HIGH' %}danger{% else %}warning text-dark{% endif %}">
+                  {{ a.type }}
+                </span>
+              </td>
+              <td>{{ a.threshold }} kWh</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-3">No anomalies detected.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const trendLabels = {{ trend_labels|safe }};
+  const trendData   = {{ trend_data|safe }};
+  initTrendChart();
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card border-0 shadow-sm bg-primary text-white">
+      <div class="card-body text-center">
+        <h5>Total Records</h5><h3>{{ stats.count }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card border-0 shadow-sm bg-success text-white">
+      <div class="card-body text-center">
+        <h5>Total Consumption</h5><h3>{{ stats.total }} kWh</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card border-0 shadow-sm bg-danger text-white">
+      <div class="card-body text-center">
+        <h5>Peak Usage</h5><h3>{{ stats.peak }} kWh</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add / Edit Form ── -->
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-white fw-semibold">
+    {% if edit_record %}Edit Record{% else %}Add New Record{% endif %}
+  </div>
+  <div class="card-body">
+    <form method="post" action="{% if edit_record %}{% url 'edit_data' edit_record.id %}{% else %}{% url 'add_data' %}{% endif %}">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Region</label>
+          <input type="text" name="region" class="form-control"
+                 value="{% if edit_record %}{{ edit_record.region }}{% endif %}" required
+                 list="region-list"/>
+          <datalist id="region-list">
+            {% for r in regions %}<option value="{{ r }}">{% endfor %}
+          </datalist>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Date</label>
+          <input type="date" name="date" class="form-control"
+                 value="{% if edit_record %}{{ edit_record.date }}{% endif %}" required/>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Usage (kWh)</label>
+          <input type="number" step="0.01" name="usage" class="form-control"
+                 value="{% if edit_record %}{{ edit_record.usage }}{% endif %}" required/>
+        </div>
+      </div>
+      <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          {% if edit_record %}Update{% else %}Add Record{% endif %}
+        </button>
+        {% if edit_record %}
+        <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary">Cancel</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Records Table ── -->
+<div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">All Records</span>
+    <a href="{% url 'upload' %}" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-upload"></i> Upload CSV
+    </a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-striped mb-0">
+        <thead class="table-dark">
+          <tr><th>#</th><th>Region</th><th>Date</th><th>Usage (kWh)</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ r.region }}</td>
+            <td>{{ r.date }}</td>
+            <td>{{ r.usage }}</td>
+            <td>
+              <a href="{% url 'edit_data' r.id %}" class="btn btn-sm btn-warning">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a href="{% url 'delete_data' r.id %}"
+                 class="btn btn-sm btn-danger"
+                 onclick="return confirm('Delete this record?')">
+                <i class="bi bi-trash"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-3">No records yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
